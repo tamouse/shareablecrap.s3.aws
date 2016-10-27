@@ -23,6 +23,7 @@ task :check do
   puts "aws_config: #{aws_config.inspect}"
   puts "baseurl: #{baseurl.inspect}"
   puts "bucket: #{bucket.inspect}"
+  puts "crapdata: #{crapdata(files).inspect} "
 
 end
 
@@ -38,7 +39,7 @@ end
 
 desc "creates the crap yaml data file from current crap"
 task :crapdata do
-
+  File.write(crapdatafile, crapdata(files))
 end
 
 desc "build the site"
@@ -48,62 +49,94 @@ end
 
 desc "push the site to s3"
 task :publish => [:build] do
-  sh "s3cmd -rP put #{builddir} #{s3dest}"
+  sh "s3cmd -rP sync #{builddir} #{s3dest}"
+end
+
+def assetdir
+  @assetdir ||= File.expand_path('../_assets', __FILE__)
+end
+
+def aws_config
+  @aws_config ||= YAML.load(
+    ERB.new(
+      File.read(
+        File.join(datadir, 'aws.yml')
+        )
+      ).result
+    )
+end
+
+def baseurl
+  aws_config['baseurl']
+end
+
+def bucket
+  aws_config['bucket']
 end
 
 def builddir
   "_site/"
 end
 
-def s3dest
-  "s3://shareablecrap/"
-end
-
-def is_image?(file)
-  file.match(%r{\.(jpe?g|png|gif|tiff?|svg)$})
-end
-
-def make_thumbs_cmd(imagefiles, thumbdir)
-  %Q{mogrify -path #{thumbdir} -format gif -quality 40 -thumbnail 150x150^ -gravity center -extent 150x150 #{prepare(imagefiles)}}
-end
-
 def copy_default_thumb(otherfiles, thumbdir)
   otherfiles.each do |file|
-    FileUtils.cp default_thumb, File.join(thumbdir, thumbfile(File.basename(file)))
+    FileUtils.cp default_thumb, thumbfile(file)
   end
 end
 
-def thumbfile(filename)
-  [File.basename(filename, '.*'), File.extname(default_thumb)].join('.')
+def crapdata(files)
+  files.map do |file|
+    {
+      "crap" => remove_local_path(file),
+      "thumb" => remove_local_path(thumbfile(file)),
+      "title" => File.basename(file, '.*')
+    }
+  end.to_yaml
 end
 
-
-def imagefiles
-  @imagefiles ||= []
+def crapdatafile
+  File.join(datadir, 'crap.yml')
 end
 
-def otherfiles
-  @otherfiles ||= []
+def crapdir
+  File.join(File.expand_path('../crap', __FILE__))
 end
 
-def prepare(words)
-  words.map do |word|
-    word.shellescape
-  end.join(' ')
+def datadir
+  @datadir ||= File.expand_path('../_data', __FILE__)
 end
 
-
-def thumbdir
-  @thumbdir ||= File.expand_path('../thumbs', __FILE__)
-    .tap{|thumbdir| FileUtils.rm_rf(thumbdir) && FileUtils.mkdir_p(thumbdir)}
+def default_thumb
+  @default_thumb ||= make_default_thumb
 end
 
 def files
   @files ||= Dir[File.join(crapdir, '*')].reject{|file| file.match(%r{\A\.})} # no dot-files
 end
 
-def crapdir
-  File.join(File.expand_path('../crap', __FILE__))
+def imagefiles
+  @imagefiles ||= []
+end
+
+def is_image?(file)
+  file.match(%r{\.(jpe?g|png|gif|tiff?|svg)$})
+end
+
+def local_path
+  File.join(File.expand_path('../', __FILE__), '')
+end
+
+def make_default_thumb
+  sh make_thumbs_cmd([File.join(assetdir, 'default_thumb.png')], assetdir)
+  File.join(assetdir, 'default_thumb.gif')
+end
+
+def make_thumbs_cmd(imagefiles, thumbdir)
+  %Q{mogrify -path #{thumbdir} -format gif -quality 40 -thumbnail #{thumbsize}^ -gravity center -extent #{thumbsize} #{prepare(imagefiles)}}
+end
+
+def otherfiles
+  @otherfiles ||= []
 end
 
 def partition_files(files)
@@ -119,37 +152,30 @@ def partition_files(files)
   [images, nonimages]
 end
 
-def default_thumb
-  @default_thumb ||= File.expand_path('../_assets/default_thumb.gif', __FILE__)
+def prepare(words)
+  words.map do |word|
+    word.shellescape
+  end.join(' ')
 end
-
 
 def remove_local_path(file)
   file.sub(local_path, '')
 end
 
-def local_path
-  File.join(File.expand_path('../', __FILE__), '')
+def s3dest
+  bucket
 end
 
-def aws_config
-  @aws_config ||= YAML.load(
-    ERB.new(
-      File.read(
-        File.join(datadir, 'aws.yml')
-        )
-      ).result
-    )
+def thumbfile(filename)
+  thumbname = [File.basename(filename, '.*'), File.extname(default_thumb)].join('')
+  File.join(thumbdir, thumbname)
 end
 
-def datadir
-  @datadir ||= File.expand_path('../_data', __FILE__)
+def thumbdir
+  @thumbdir ||= File.expand_path('../thumbs', __FILE__)
+    .tap{|thumbdir| FileUtils.rm_rf(thumbdir) && FileUtils.mkdir_p(thumbdir)}
 end
 
-def bucket
-  aws_config['bucket']
-end
-
-def baseurl
-  aws_config['baseurl']
+def thumbsize
+  '100x100'
 end
