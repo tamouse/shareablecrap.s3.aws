@@ -1,0 +1,13 @@
+title: Shareable Crap
+email: tamouse@gmail.com
+description: > # this means to ignore newlines until "baseurl:"
+  Stuff i like to keep around to share with folks.
+  Absolutely no redeeming content.
+baseurl: ""
+url: ""
+
+# Build settings
+markdown: kramdown
+exclude:
+  - Gemfile
+  - Gemfile.lock
