@@ -4,3 +4,6 @@ _site
 crap/
 !crap/.keep
 thumbs/
+!thumbs/.keep
+_data/crap.yml
+_assets/default_thumb.gif
