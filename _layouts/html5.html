@@ -1,16 +1,28 @@
 <!doctype html>
 <html>
-<head>
+  <head>
     <title>{{site.title}}</title>
-</head>
-<body>
-<header class="site-header">
-    <h1>{{site.title}}</h1>
-    <p><em>{{site.description}}</em></p>
-</header>
-<main class="site-content" role="main">
-    {{ content }}
-</main>
-<footer class="site-footer"></footer>
-</body>
+    <style>
+      img { width: 100%; max-width: 100%; }
+      figure.thumb { display: inline-block; }
+      .article {
+      width: 50%;
+      margin: auto;
+      }
+
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <h1>{{site.title}}</h1>
+      <p><em>{{site.description}}</em></p>
+      <a href="{{ '/' | relative_url}}">crap</a>
+      <a href="{{ 'shit/' | relative_url }}">shit</a>
+    </header>
+    <main class="site-content" role="main">
+      {{ content }}
+    </main>
+    <footer class="site-footer"></footer>
+    <p><em>Make with <a href="http://jekyllrb.com">Jekyll</a> and &hearts;</em></p>
+  </body>
 </html>

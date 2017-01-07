@@ -3,6 +3,8 @@ _site
 .jekyll-metadata
 crap/
 !crap/.keep
+shit/
+!shit/index.md
 thumbs/
 !thumbs/.keep
 _data/crap.yml

@@ -1,0 +1,11 @@
+{% assign item = include.item %}
+<figure class="thumb">
+    <a href="{{item.crap}}" target="_blank" title="{{item.title}}">
+        <img src="{{item.thumb}}" alt="{{item.title}}">
+    </a>
+    <figcaption>
+        <a href="{{item.crap}}" target="_blank" title="{{item.title}}">
+            {{item.title}}
+        </a>
+    </figcaption>
+</figure>
